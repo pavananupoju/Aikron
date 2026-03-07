@@ -13,7 +13,7 @@ window.addEventListener('scroll', () => {
 
 // MOBILE MENU
 document.getElementById('hamburger').addEventListener('click', () => {
-  document.getElementById('mobileMenu').classList.add('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
 });
 document.getElementById('mobileClose').addEventListener('click', () => {
   document.getElementById('mobileMenu').classList.remove('open');
