@@ -231,124 +231,51 @@ animate();
   nums.forEach(n => obs.observe(n));
 })();
 
-// FORM SUBMIT
-async function handleFormSubmit(event) {
-  event.preventDefault();
-  
-  const form = event.target;
-  const submitBtn = document.getElementById('submitBtn');
-  const formData = new FormData(form);
-  
-  // Hide any existing error messages
-  const existingError = document.getElementById('formError');
-  if (existingError) {
-    existingError.style.display = 'none';
-  }
-  
-  // Validate form
-  const email = formData.get('email');
-  const firstName = formData.get('first_name');
-  const message = formData.get('message');
-  
-  if (!email || !firstName || !message) {
-    showError('Please fill in all required fields.');
-    return;
-  }
-  
-  if (!isValidEmail(email)) {
-    showError('Please enter a valid email address.');
-    return;
-  }
-  
-  submitBtn.textContent = 'Sending…';
-  submitBtn.disabled = true;
-  
+// FORM SUBMIT — Formspree
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const form = document.getElementById('contactForm');
+  const btn  = document.getElementById('submitBtn');
+
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+
   try {
-    const response = await fetch(form.action, {
+    const res = await fetch('https://formspree.io/f/mkoqgnkr', {
       method: 'POST',
-      body: formData,
-      headers: {
-        'Accept': 'application/json'
-      }
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form),
     });
-    
-    if (response.ok) {
-      // Success
-      submitBtn.textContent = '✓ Message Sent!';
-      submitBtn.style.background = 'linear-gradient(135deg,#10b981,#06b6d4)';
+
+    if (res.ok) {
+      btn.textContent = '✓ Message Sent!';
+      btn.style.background = 'linear-gradient(135deg,#10b981,#06b6d4)';
       form.reset();
-      
-      // Show success message
-      showSuccess('Your message has been sent successfully! We\'ll get back to you within 24 hours.');
-      
       setTimeout(() => {
-        submitBtn.textContent = 'Send Message →';
-        submitBtn.disabled = false;
-        submitBtn.style.background = '';
-      }, 3000);
+        btn.textContent = 'Send Message →';
+        btn.disabled = false;
+        btn.style.background = '';
+      }, 4000);
     } else {
-      // Error
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send message');
+      const data = await res.json();
+      const msg = data.errors ? data.errors.map(e => e.message).join(', ') : 'Something went wrong.';
+      btn.textContent = '✗ ' + msg;
+      btn.style.background = 'linear-gradient(135deg,#ef4444,#f97316)';
+      setTimeout(() => {
+        btn.textContent = 'Send Message →';
+        btn.disabled = false;
+        btn.style.background = '';
+      }, 4000);
     }
-  } catch (error) {
-    console.error('Form submission error:', error);
-    submitBtn.textContent = '✗ Error';
-    submitBtn.style.background = 'linear-gradient(135deg,#ef4444,#f59e0b)';
-    
-    showError('Failed to send message. Please try again or contact us directly at hello@aikorn.com');
-    
+  } catch (err) {
+    btn.textContent = '✗ Network Error. Try again.';
+    btn.style.background = 'linear-gradient(135deg,#ef4444,#f97316)';
     setTimeout(() => {
-      submitBtn.textContent = 'Send Message →';
-      submitBtn.disabled = false;
-      submitBtn.style.background = '';
-    }, 3000);
+      btn.textContent = 'Send Message →';
+      btn.disabled = false;
+      btn.style.background = '';
+    }, 4000);
   }
-}
-
-function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-function showError(message) {
-  showMessage(message, 'error');
-}
-
-function showSuccess(message) {
-  showMessage(message, 'success');
-}
-
-function showMessage(message, type) {
-  // Create or update message div
-  let messageDiv = document.getElementById('formMessage');
-  if (!messageDiv) {
-    messageDiv = document.createElement('div');
-    messageDiv.id = 'formMessage';
-    document.getElementById('contactForm').prepend(messageDiv);
-  }
-  
-  const isError = type === 'error';
-  messageDiv.style.cssText = `
-    background: ${isError ? '#fef2f2' : '#f0fdf4'};
-    border: 1px solid ${isError ? '#fecaca' : '#bbf7d0'};
-    color: ${isError ? '#dc2626' : '#16a34a'};
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    display: block;
-  `;
-  
-  messageDiv.textContent = message;
-  
-  // Hide message after 5 seconds for errors, 8 seconds for success
-  const timeout = isError ? 5000 : 8000;
-  setTimeout(() => {
-    if (messageDiv) {
-      messageDiv.style.display = 'none';
-    }
-  }, timeout);
 }
 
 // SMOOTH SCROLL for anchor links
