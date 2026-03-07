@@ -126,7 +126,7 @@ h1,h2,h3,h4 { font-family: var(--font-display); }
 }
 .btn-primary {
   background: var(--green);
-  color: #050f08;
+  color: #54dd87;
 }
 .btn-primary:hover {
   background: var(--lime);
