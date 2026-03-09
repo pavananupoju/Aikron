@@ -364,3 +364,138 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     }
   });
 });
+// ── FOOTER NEWSLETTER ────────────────────────
+function handleFooterNewsletter(event) {
+  event.preventDefault();
+  const form = event.target;
+  const btn = form.querySelector('.ft-nl-btn');
+  const input = form.querySelector('.ft-nl-input');
+  btn.innerHTML = '<span>Subscribed ✓</span>';
+  btn.style.background = 'linear-gradient(135deg,#10b981,#16a34a)';
+  input.value = '';
+  input.disabled = true;
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = '<span>Subscribe</span><svg viewBox="0 0 20 20" fill="none" width="16" height="16"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    btn.style.background = '';
+    input.disabled = false;
+    btn.disabled = false;
+  }, 3500);
+}
+
+// ── FOOTER CANVAS PARTICLES ──────────────────
+(function() {
+  const fc = document.getElementById('footerCanvas');
+  if (!fc) return;
+  const ftx = fc.getContext('2d');
+  let fw, fh, fparts = [];
+  function fresz() { fw = fc.width = fc.offsetWidth; fh = fc.height = fc.offsetHeight; }
+  fresz();
+  window.addEventListener('resize', fresz);
+  class FPart {
+    constructor() { this.reset(); }
+    reset() { this.x=Math.random()*fw; this.y=Math.random()*fh; this.vx=(Math.random()-0.5)*0.3; this.vy=(Math.random()-0.5)*0.3; this.r=Math.random()*1.2+0.3; this.a=Math.random()*0.35+0.05; }
+    update() { this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>fw||this.y<0||this.y>fh) this.reset(); }
+    draw() { ftx.beginPath(); ftx.arc(this.x,this.y,this.r,0,Math.PI*2); ftx.fillStyle=`rgba(74,222,128,${this.a})`; ftx.fill(); }
+  }
+  for(let i=0;i<80;i++) fparts.push(new FPart());
+  function floop() {
+    ftx.clearRect(0,0,fw,fh);
+    for(let i=0;i<fparts.length;i++) for(let j=i+1;j<fparts.length;j++) {
+      const dx=fparts[i].x-fparts[j].x, dy=fparts[i].y-fparts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<90){ ftx.beginPath(); ftx.moveTo(fparts[i].x,fparts[i].y); ftx.lineTo(fparts[j].x,fparts[j].y); ftx.strokeStyle=`rgba(74,222,128,${0.04*(1-d/90)})`; ftx.lineWidth=0.5; ftx.stroke(); }
+    }
+    fparts.forEach(p=>{p.update();p.draw();});
+    requestAnimationFrame(floop);
+  }
+  floop();
+})();
+
+// ── FOOTER SCROLL REVEAL ─────────────────────
+(function() {
+  const ftEls = document.querySelectorAll('.ft-reveal');
+  const ftObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('ft-visible');ftObs.unobserve(e.target);} });
+  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+  ftEls.forEach(el => ftObs.observe(el));
+})();
+// ── TEAM CARD FLIP ───────────────────────────
+(function () {
+  document.querySelectorAll('.tm-card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('flipped');
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.classList.toggle('flipped');
+      }
+    });
+  });
+})();
+// ── TEAM STACK CYCLE ON HOVER ────────────────
+(function () {
+  const stack = document.getElementById('teamStack');
+  if (!stack) return;
+
+  const cards = [
+    stack.querySelector('.ts-card-1'),
+    stack.querySelector('.ts-card-2'),
+    stack.querySelector('.ts-card-3'),
+    stack.querySelector('.ts-card-4'),
+  ];
+
+  // Z-order layers from top to bottom
+  const rotations = [-1.5, 1.8, -2.5, 2.2];
+  const offsets   = [0, 6, 12, 18];
+
+  let current = 0;
+  let interval = null;
+
+  function applyStack() {
+    cards.forEach((card, i) => {
+      const pos = ((i - current) % 4 + 4) % 4; // 0=top, 1,2,3=below
+      card.style.zIndex    = 4 - pos;
+      card.style.transform = pos === 0
+        ? `rotate(${rotations[0]}deg) translateY(0px)`
+        : `rotate(${rotations[pos]}deg) translateY(${offsets[pos]}px)`;
+      card.style.opacity   = '1';
+      card.style.transition = 'transform 0.55s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.4s ease, opacity 0.4s ease';
+
+      // Top card gets brighter shadow
+      card.style.boxShadow = pos === 0
+        ? '0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(74,222,128,0.18)'
+        : '';
+    });
+  }
+
+  function cycleNext() {
+    // Animate top card flying up-off
+    const topCard = cards[current];
+    topCard.style.transform  = `rotate(${rotations[0]}deg) translateY(-280px)`;
+    topCard.style.opacity    = '0';
+
+    // Move to next
+    current = (current + 1) % 4;
+
+    setTimeout(() => {
+      applyStack();
+    }, 200);
+  }
+
+  // Start cycling while hovered
+  stack.addEventListener('mouseenter', () => {
+    interval = setInterval(cycleNext, 1100);
+  });
+
+  stack.addEventListener('mouseleave', () => {
+    clearInterval(interval);
+    interval = null;
+    // Smoothly reset to original order
+    current = 0;
+    setTimeout(applyStack, 50);
+  });
+
+  // Init
+  applyStack();
+})();
